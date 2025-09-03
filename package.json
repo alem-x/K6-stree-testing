@@ -1,0 +1,8 @@
+{
+  "name": "k6-stress-test",
+  "scripts": {
+    "test": "k6 run master.js",
+    "test:env": "node load-env.js run master.js",
+    "test:custom": "node load-env.js"
+  }
+}

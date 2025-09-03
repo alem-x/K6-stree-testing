@@ -1,0 +1,84 @@
+name: Deploy K6 Summary to GitHub Pages
+
+# This workflow is manually triggered only
+on:
+  workflow_dispatch:
+    inputs:
+      vus:
+        description: 'Number of Virtual Users'
+        required: true
+        default: '100'
+        type: string
+      duration:
+        description: 'Test Duration (e.g., 30s, 5m, 1h)'
+        required: true
+        default: '1m'
+        type: string
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Install K6
+        run: |
+          # Get the latest k6 release download URL
+          DOWNLOAD_URL=$(curl -s https://api.github.com/repos/grafana/k6/releases/latest \
+            | grep "browser_download_url.*k6.*linux-amd64.tar.gz" \
+            | cut -d '"' -f 4)
+          
+          # Download and extract k6
+          curl -L "$DOWNLOAD_URL" -o k6.tar.gz
+          tar -xzf k6.tar.gz
+          
+          # Find the k6 binary (it's usually in a subdirectory)
+          K6_BINARY=$(find . -name "k6" -type f)
+          sudo mv "$K6_BINARY" /usr/local/bin/k6
+          sudo chmod +x /usr/local/bin/k6
+          
+          # Clean up
+          rm -rf k6.tar.gz k6-*
+          
+          # Verify installation
+          k6 version
+      
+      - name: Run K6 Tests
+        run: k6 run --vus ${{ inputs.vus }} --duration ${{ inputs.duration }} master.js
+        env:
+          BASE_URL: ${{ secrets.BASE_URL }}
+      
+      - name: Prepare for Pages
+        run: |
+          mkdir -p _site
+          cp summary.html _site/index.html
+          # Create .nojekyll to disable Jekyll processing
+          touch _site/.nojekyll
+      
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+      
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site/
+      
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
