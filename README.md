@@ -207,6 +207,7 @@ Before running the workflow, you need to set up the `BASE_URL` secret:
 4. Configure the test parameters:
    - **Virtual Users (VUs)**: Number of concurrent users (default: 100)
    - **Duration**: Test duration (default: 1m, e.g., 30s, 5m, 1h)
+   - **Base URL**: API endpoint to test (default: https://api-dev.alemx.com)
 5. Click "Run workflow" to start the deployment
 6. The workflow will:
    - Install K6
@@ -229,6 +230,14 @@ You can run different load tests by adjusting the parameters:
 - **Spike Test**: VUs: 500, Duration: 1m (sudden traffic spike)
 - **Endurance Test**: VUs: 100, Duration: 10m (long-running stability test)
 
+### Environment-Specific Testing
+
+You can also test different environments by changing the Base URL:
+
+- **Development**: `https://api-dev.alemx.com` (default)
+- **Staging**: `https://api-staging.alemx.com`
+- **Production**: `https://api.alemx.com`
+
 ### Workflow Details
 
 The workflow is defined in `.github/workflows/deploy-summary.yml` and includes:
@@ -236,6 +245,7 @@ The workflow is defined in `.github/workflows/deploy-summary.yml` and includes:
 - **Input Parameters**:
   - `vus`: Number of virtual users (default: 100)
   - `duration`: Test duration (default: 1m)
+  - `base_url`: API endpoint to test (default: https://api-dev.alemx.com)
 - Automated test execution with custom load parameters
 - Report generation and deployment
 - Proper permissions for GitHub Pages deployment
