@@ -14,6 +14,11 @@ on:
         required: true
         default: '1m'
         type: string
+      base_url:
+        description: 'Base URL for API testing'
+        required: false
+        default: 'https://api-dev.alemx.com'
+        type: string
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
@@ -62,7 +67,7 @@ jobs:
       - name: Run K6 Tests
         run: k6 run --vus ${{ inputs.vus }} --duration ${{ inputs.duration }} master.js
         env:
-          BASE_URL: ${{ secrets.BASE_URL }}
+          BASE_URL: ${{ inputs.base_url || secrets.BASE_URL || 'https://api-dev.alemx.com' }}
       
       - name: Prepare for Pages
         run: |
